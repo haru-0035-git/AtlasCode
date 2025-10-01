@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sandbox</title>
+</head>
+<body>
+  <script>
+    window.addEventListener('message', (event) => {
+      // It's a good practice to check the origin for security
+      // For this example, we'll allow any origin for simplicity, but in production, you should restrict it.
+      // if (event.origin !== 'http://localhost:3000') return;
+
+      const { data } = event;
+      const logs = [];
+
+      // Override console.log to capture logs
+      const oldLog = console.log;
+      console.log = (...args) => {
+        logs.push(args.map(arg => JSON.stringify(arg)).join(' '));
+        oldLog.apply(console, args);
+      };
+
+      try {
+        const result = eval(data);
+        if (result !== undefined) {
+          logs.push('Return value: ' + JSON.stringify(result));
+        }
+      } catch (error) {
+        logs.push('Error: ' + error.message);
+      }
+
+      // Restore original console.log
+      console.log = oldLog;
+
+      // Post the logs back to the parent window
+      event.source.postMessage(logs, event.origin);
+    });
+  </script>
+</body>
+</html>
