@@ -1,22 +1,26 @@
 import Link from 'next/link';
 
-const mockLessons = [
-  { id: '1', title: 'Introduction to Variables' },
-  { id: '2', title: 'Data Types' },
-  { id: '3', title: 'Functions and Scope' },
-  { id: '4', title: 'Arrays and Objects' },
-  { id: '5', title: 'DOM Manipulation' },
-];
+// Define the type for a single lesson
+interface Lesson {
+  id: number;
+  title: string;
+}
 
-const Sidebar = () => {
+// Define the props for the Sidebar component
+interface SidebarProps {
+  lessons: Lesson[];
+  courseTitle: string;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ lessons, courseTitle }) => {
   return (
-    <aside className="w-64 bg-gray-100 p-4 border-r border-gray-200">
-      <h2 className="text-lg font-bold mb-4">Course Lessons</h2>
+    <aside className="w-64 bg-gray-100 p-4 border-r border-gray-200 flex-shrink-0">
+      <h2 className="text-lg font-bold mb-4 text-gray-800">{courseTitle}</h2>
       <nav>
-        <ul>
-          {mockLessons.map((lesson) => (
-            <li key={lesson.id} className="mb-2">
-              <Link href={`/lessons/${lesson.id}`} className="text-gray-700 hover:text-blue-600 transition-colors">
+        <ul className="border-t border-gray-300">
+          {lessons.map((lesson) => (
+            <li key={lesson.id} className="border-b border-gray-300">
+              <Link href={`/lessons/${lesson.id}`} className="block p-3 text-gray-700 hover:bg-gray-200 transition-colors">
                 {lesson.title}
               </Link>
             </li>

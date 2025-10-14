@@ -157,3 +157,73 @@ CREATE TABLE progress (
   status VARCHAR(20) CHECK (status IN ('completed','in_progress'))
 );
 ```
+
+---
+
+## 7. Prismaスキーマ
+
+`schema.prisma`ファイルに記述するデータベースモデルの定義です。SQL設計案をPrismaの形式で表現したものです。
+
+```prisma
+// 進捗状況を示すためのEnum
+enum ProgressStatus {
+  completed
+  in_progress
+}
+
+// コースモデル
+model Course {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  language    String
+  lessons     Lesson[]
+  progress    Progress[]
+}
+
+// レッスンモデル
+model Lesson {
+  id          Int        @id @default(autoincrement())
+  course_id   Int
+  title       String
+  content     String?
+  order_index Int
+  course      Course     @relation(fields: [course_id], references: [id])
+  exercises   Exercise[]
+  progress    Progress[]
+}
+
+// 演習問題モデル
+model Exercise {
+  id              Int          @id @default(autoincrement())
+  lesson_id       Int
+  question        String
+  starter_code    String?
+  expected_output String?
+  test_cases      Json?
+  lesson          Lesson       @relation(fields: [lesson_id], references: [id])
+  submissions     Submission[]
+}
+
+// 提出コードモデル
+model Submission {
+  id          Int      @id @default(autoincrement())
+  exercise_id Int
+  session_id  String
+  code        String
+  result      String?
+  created_at  DateTime @default(now())
+  exercise    Exercise @relation(fields: [exercise_id], references: [id])
+}
+
+// 学習進捗モデル
+model Progress {
+  id         Int            @id @default(autoincrement())
+  session_id String
+  course_id  Int
+  lesson_id  Int
+  status     ProgressStatus
+  course     Course         @relation(fields: [course_id], references: [id])
+  lesson     Lesson         @relation(fields: [lesson_id], references: [id])
+}
+```
