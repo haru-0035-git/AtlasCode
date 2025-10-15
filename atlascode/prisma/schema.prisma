@@ -36,6 +36,8 @@ model Lesson {
   course      Course     @relation(fields: [course_id], references: [id])
   exercises   Exercise[]
   progress    Progress[]
+
+  @@unique([course_id, title])
 }
 
 // 演習問題モデル
@@ -48,6 +50,8 @@ model Exercise {
   test_cases      Json?
   lesson          Lesson       @relation(fields: [lesson_id], references: [id])
   submissions     Submission[]
+
+  @@unique([lesson_id, question])
 }
 
 // 提出コードモデル

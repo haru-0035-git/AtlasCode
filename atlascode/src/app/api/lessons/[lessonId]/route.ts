@@ -26,6 +26,7 @@ export async function GET(
             },
           },
         },
+        exercises: true, // Include exercises
       },
     });
 

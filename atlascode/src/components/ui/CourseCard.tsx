@@ -24,7 +24,7 @@ const CourseCard: FC<CourseCardProps> = ({ title, description, language, progres
         </div>
         <div>
           <div className="flex justify-between mb-1">
-            <span className="text-base font-medium text-blue-700">Progress</span>
+            <span className="text-base font-medium text-blue-700">進捗</span>
             <span className="text-sm font-medium text-blue-700">{progress}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">

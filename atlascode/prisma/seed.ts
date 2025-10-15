@@ -35,6 +35,7 @@ async function main() {
     }
   });
 
+  await prisma.exercise.deleteMany({});
   await prisma.lesson.deleteMany({});
 
   const lessons = [
@@ -48,7 +49,24 @@ async function main() {
   ];
 
   for (const lessonData of lessons) {
-    await prisma.lesson.create({ data: lessonData });
+    await prisma.lesson.upsert({
+      where: { course_id_title: { course_id: lessonData.course_id, title: lessonData.title } },
+      update: { content: lessonData.content, order_index: lessonData.order_index },
+      create: lessonData,
+    });
+  }
+
+  const lesson2 = await prisma.lesson.findFirst({ where: { title: '変数とデータ型' } });
+  if (lesson2) {
+    await prisma.exercise.upsert({
+      where: { lesson_id_question: { lesson_id: lesson2.id, question: '変数を宣言して、コンソールに出力してみましょう。' } },
+      update: { starter_code: '// この下にコードを書いてください\n' },
+      create: {
+        lesson_id: lesson2.id,
+        question: '変数を宣言して、コンソールに出力してみましょう。',
+        starter_code: '// この下にコードを書いてください\n',
+      },
+    });
   }
 
   console.log(`Seeding finished.`);

@@ -2,12 +2,18 @@
 
 import { useState, useEffect, use } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
+import Link from 'next/link';
 
 // Define the types for the data fetched from the API
+interface Exercise {
+  id: number;
+}
+
 interface Lesson {
   id: number;
   title: string;
   content: string | null;
+  exercises: Exercise[];
 }
 
 interface Course {
@@ -53,15 +59,15 @@ const LessonPage = ({ params }: { params: Promise<{ lessonId: string }> }) => {
   }, [lessonId]);
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return <div className="flex justify-center items-center h-screen">読み込み中...</div>;
   }
 
   if (error) {
-    return <div className="flex justify-center items-center h-screen text-red-500">Error: {error}</div>;
+    return <div className="flex justify-center items-center h-screen text-red-500">エラー: {error}</div>;
   }
 
   if (!lesson) {
-    return <div className="flex justify-center items-center h-screen">Lesson not found.</div>;
+    return <div className="flex justify-center items-center h-screen">レッスンが見つかりません。</div>;
   }
 
   return (
@@ -72,6 +78,14 @@ const LessonPage = ({ params }: { params: Promise<{ lessonId: string }> }) => {
         <div className="prose lg:prose-xl max-w-none">
           <p>{lesson.content}</p>
         </div>
+
+        {lesson.exercises && lesson.exercises.length > 0 && (
+          <div className="mt-8">
+            <Link href={`/exercises/${lesson.exercises[0].id}`} className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                演習へ進む
+            </Link>
+          </div>
+        )}
       </main>
     </div>
   );
