@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
     const courses = await prisma.course.findMany({
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        language: true,
         lessons: {
           orderBy: {
             order_index: 'asc',
           },
-          take: 1, // Only take the first lesson
+          take: 1,
+        },
+        _count: {
+          select: { lessons: true },
         },
       },
     });
@@ -22,7 +27,5 @@ export async function GET() {
       { error: "Failed to fetch courses" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

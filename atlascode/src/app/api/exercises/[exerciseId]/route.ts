@@ -9,6 +9,14 @@ export async function GET(req: NextRequest, { params }: { params: { exerciseId: 
     const { exerciseId } = params;
     const exercise = await prisma.exercise.findUnique({
       where: { id: parseInt(exerciseId, 10) },
+      select: {
+        id: true,
+        lesson_id: true,
+        question: true,
+        starter_code: true,
+        expected_output: true,
+        test_cases: true,
+      },
     });
 
     if (!exercise) {

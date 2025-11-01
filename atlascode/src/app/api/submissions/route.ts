@@ -1,51 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
+import { PrismaClient, ProgressStatus } from '../../../generated/prisma';
 
 const prisma = new PrismaClient();
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { code, exerciseId } = body;
+    const { code, exerciseId, sessionId, testResults, allTestsPassed } = body;
 
-    if (!code || !exerciseId) {
-      return NextResponse.json({ error: 'Missing code or exerciseId' }, { status: 400 });
+    if (!code || !exerciseId || !sessionId || testResults === undefined || allTestsPassed === undefined) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const originalConsoleLog = console.log;
-    originalConsoleLog('Received code:', code);
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: parseInt(exerciseId, 10) },
+      include: { lesson: true },
+    });
 
-    let result = '';
-    const logs: string[] = [];
-
-    console.log = (...args: any[]) => {
-      logs.push(args.map(arg => JSON.stringify(arg)).join(' '));
-    };
-
-    try {
-      const runnable = new Function(code);
-      runnable();
-      result = logs.join('\n');
-    } catch (e: any) {
-      result = e.message;
-    } finally {
-      console.log = originalConsoleLog;
+    if (!exercise) {
+      return NextResponse.json({ error: 'Exercise not found' }, { status: 404 });
     }
 
-    originalConsoleLog('Final result:', result);
+    if (allTestsPassed) {
+      await prisma.progress.upsert({
+        where: {
+          session_id_course_id_lesson_id: {
+            session_id: sessionId,
+            course_id: exercise.lesson.course_id,
+            lesson_id: exercise.lesson_id,
+          }
+        },
+        update: { status: ProgressStatus.completed },
+        create: {
+          session_id: sessionId,
+          course_id: exercise.lesson.course_id,
+          lesson_id: exercise.lesson_id,
+          status: ProgressStatus.completed,
+        },
+      });
+    }
 
-    const submission = await prisma.submission.create({
+    await prisma.submission.create({
       data: {
         exercise_id: parseInt(exerciseId, 10),
         code,
-        result,
-        session_id: 'anonymous', // FIXME: Replace with actual session management
+        result: JSON.stringify(testResults),
+        session_id: sessionId,
       },
     });
 
-    return NextResponse.json({ result });
+    return NextResponse.json({ testResults, allTestsPassed });
+
   } catch (error) {
     console.error('Error in submission API:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }

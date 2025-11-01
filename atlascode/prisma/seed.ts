@@ -37,6 +37,7 @@ async function main() {
 
   await prisma.exercise.deleteMany({});
   await prisma.lesson.deleteMany({});
+  await prisma.quiz.deleteMany({}); // Add this line to clear existing quizzes
 
   const lessons = [
     // JavaScript Lessons
@@ -65,6 +66,39 @@ async function main() {
         lesson_id: lesson2.id,
         question: '変数を宣言して、コンソールに出力してみましょう。',
         starter_code: '// この下にコードを書いてください\n',
+      },
+    });
+
+    // Add a quiz to Lesson 2
+    const quiz1 = await prisma.quiz.upsert({
+      where: { lesson_id_title: { lesson_id: lesson2.id, title: '変数とデータ型クイズ' } },
+      update: {},
+      create: {
+        lesson_id: lesson2.id,
+        title: '変数とデータ型クイズ',
+        description: 'JavaScriptの変数とデータ型に関する理解度を測ります。',
+        questions: {
+          create: [
+            {
+              text: 'JavaScriptで変数を宣言するために使用されるキーワードはどれですか？',
+              type: 'multiple_choice',
+              options: ['var', 'let', 'const', 'すべて'],
+              answer: ['すべて'],
+            },
+            {
+              text: '次のうち、プリミティブ型ではないものはどれですか？',
+              type: 'multiple_choice',
+              options: ['string', 'number', 'boolean', 'object'],
+              answer: ['object'],
+            },
+            {
+              text: 'JavaScriptで文字列を宣言する際に使用する記号は？',
+              type: 'multiple_choice',
+              options: ['シングルクォート (\'\')', 'ダブルクォート ("")', 'バッククォート (``)', 'すべて'],
+              answer: ['すべて'],
+            },
+          ],
+        },
       },
     });
   }

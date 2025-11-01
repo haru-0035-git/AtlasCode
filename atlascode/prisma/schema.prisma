@@ -1,11 +1,11 @@
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
 }
 
 // 進捗状況を示すためのEnum
@@ -14,16 +14,20 @@ enum ProgressStatus {
   in_progress
 }
 
+// 質問タイプ
+enum QuestionType {
+  multiple_choice
+  fill_in_the_blank
+}
+
 // コースモデル
 model Course {
   id          Int        @id @default(autoincrement())
-  title       String
+  title       String     @unique
   description String?
   language    String
   lessons     Lesson[]
   progress    Progress[]
-
-  @@unique([title])
 }
 
 // レッスンモデル
@@ -36,6 +40,7 @@ model Lesson {
   course      Course     @relation(fields: [course_id], references: [id])
   exercises   Exercise[]
   progress    Progress[]
+  quizzes     Quiz[]
 
   @@unique([course_id, title])
 }
@@ -74,4 +79,48 @@ model Progress {
   status     ProgressStatus
   course     Course         @relation(fields: [course_id], references: [id])
   lesson     Lesson         @relation(fields: [lesson_id], references: [id])
+
+  @@unique([session_id, course_id, lesson_id])
+}
+
+// クイズモデル
+model Quiz {
+  id          Int              @id @default(autoincrement())
+  lesson_id   Int
+  title       String
+  description String?
+  lesson      Lesson           @relation(fields: [lesson_id], references: [id])
+  questions   QuizQuestion[]
+  submissions QuizSubmission[]
+
+  @@unique([lesson_id, title])
+}
+
+// クイズ問題モデル
+model QuizQuestion {
+  id            Int              @id @default(autoincrement())
+  quiz_id       Int
+  text          String
+  type          QuestionType
+  options       String[]
+  answer        String[]
+  quiz          Quiz             @relation(fields: [quiz_id], references: [id])
+  submissions   QuizSubmission[]
+
+  @@unique([quiz_id, text])
+}
+
+// クイズ回答モデル
+model QuizSubmission {
+  id           Int          @id @default(autoincrement())
+  session_id   String
+  quiz_id      Int
+  question_id  Int
+  answer       String[]
+  is_correct   Boolean
+  submitted_at DateTime     @default(now())
+  quiz         Quiz         @relation(fields: [quiz_id], references: [id])
+  question     QuizQuestion @relation(fields: [question_id], references: [id])
+
+  @@unique([session_id, quiz_id, question_id])
 }

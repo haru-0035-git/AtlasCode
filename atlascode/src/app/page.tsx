@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import CourseCard from "@/components/ui/CourseCard";
+import { v4 as uuidv4 } from 'uuid';
 
-// APIから返されるコースの型を定義
 type Course = {
   id: number;
   title: string;
@@ -12,22 +12,55 @@ type Course = {
   lessons: {
     id: number;
   }[];
+  _count: {
+    lessons: number;
+  };
+};
+
+type Progress = {
+  lesson_id: number;
+  status: string;
 };
 
 export default function Home() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [progress, setProgress] = useState<Progress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCourses = async () => {
+    let storedSessionId = localStorage.getItem('sessionId');
+    if (!storedSessionId) {
+      storedSessionId = uuidv4();
+      localStorage.setItem('sessionId', storedSessionId);
+    }
+    setSessionId(storedSessionId);
+  }, []);
+
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const response = await fetch('/api/courses');
-        if (!response.ok) {
+        const [coursesResponse, progressResponse] = await Promise.all([
+          fetch('/api/courses'),
+          fetch(`/api/progress/${sessionId}`),
+        ]);
+
+        if (!coursesResponse.ok) {
           throw new Error('Failed to fetch courses');
         }
-        const data = await response.json();
-        setCourses(data);
+        if (!progressResponse.ok) {
+          throw new Error('Failed to fetch progress');
+        }
+
+        const coursesData = await coursesResponse.json();
+        const progressData = await progressResponse.json();
+
+        setCourses(coursesData);
+        setProgress(progressData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
@@ -35,8 +68,20 @@ export default function Home() {
       }
     };
 
-    fetchCourses();
-  }, []);
+    fetchData();
+  }, [sessionId]);
+
+  const calculateProgress = (course: Course) => {
+    const totalLessons = course._count.lessons;
+    if (totalLessons === 0) {
+      return 0;
+    }
+    const completedLessons = progress.filter(p => {
+      const lessonInCourse = course.lessons.some(l => l.id === p.lesson_id);
+      return lessonInCourse && p.status === 'completed';
+    }).length;
+    return (completedLessons / totalLessons) * 100;
+  };
 
   if (isLoading) {
     return <div className="text-center">コースを読み込み中...</div>;
@@ -52,6 +97,7 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => {
           const firstLessonId = course.lessons[0]?.id;
+          const courseProgress = calculateProgress(course);
           return (
             <CourseCard 
               key={course.id} 
@@ -59,8 +105,7 @@ export default function Home() {
               description={course.description || ''}
               language={course.language}
               firstLessonId={firstLessonId}
-              // TODO: Implement progress tracking
-              progress={0} 
+              progress={courseProgress} 
             />
           );
         })}

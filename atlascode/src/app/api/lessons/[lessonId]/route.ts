@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '../../../../generated/prisma';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ lessonId: string }> }
+  { params }: { params: { lessonId: string } }
 ) {
   try {
-    const { lessonId } = await params;
+    const lessonId = params.lessonId;
     const parsedLessonId = Number.parseInt(lessonId, 10);
     if (Number.isNaN(parsedLessonId)) {
       return NextResponse.json({ error: 'Invalid lesson ID' }, { status: 400 });
@@ -26,7 +24,8 @@ export async function GET(
             },
           },
         },
-        exercises: true, // Include exercises
+        exercises: true,
+        quizzes: true, // Include quizzes
       },
     });
 
@@ -41,7 +40,5 @@ export async function GET(
       { error: "Failed to fetch lesson" },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

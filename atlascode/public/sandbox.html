@@ -1,40 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sandbox</title>
-</head>
-<body>
+  <title>Code Sandbox</title>
   <script>
     window.addEventListener('message', (event) => {
-      // It's a good practice to check the origin for security
-      // For this example, we'll allow any origin for simplicity, but in production, you should restrict it.
-      // if (event.origin !== 'http://localhost:3000') return;
-
-      const { data } = event;
-      const logs = [];
-
-      // Override console.log to capture logs
-      const oldLog = console.log;
-      console.log = (...args) => {
-        logs.push(args.map(arg => JSON.stringify(arg)).join(' '));
-        oldLog.apply(console, args);
-      };
-
-      try {
-        const result = eval(data);
-        if (result !== undefined) {
-          logs.push('Return value: ' + JSON.stringify(result));
-        }
-      } catch (error) {
-        logs.push('Error: ' + error.message);
+      if (event.source !== window.parent) {
+        return;
       }
 
-      // Restore original console.log
-      console.log = oldLog;
+      const { code, testCases } = event.data;
+      const results = [];
 
-      // Post the logs back to the parent window
-      event.source.postMessage(logs, event.origin);
+      for (const testCase of testCases) {
+        let output = '';
+        let error = null;
+        let passed = false;
+
+        // Redirect console.log to capture output
+        const originalConsoleLog = console.log;
+        console.log = (...args) => {
+          output += args.map(arg => typeof arg === 'string' ? arg : JSON.stringify(arg)).join(' ') + '\n';
+        };
+
+        try {
+          // Create a new function to execute the user's code
+          // This is still within the iframe sandbox, so it's safer than on the server
+          const fullCode = `${testCase.input || ''}\n${code}`;
+          const runnable = new Function(fullCode);
+          runnable();
+          passed = output.trim() === testCase.expected.trim();
+        } catch (e) {
+          error = e.message;
+          passed = false;
+        } finally {
+          console.log = originalConsoleLog; // Restore console.log
+        }
+        results.push({ ...testCase, actual: output.trim(), error, passed });
+      }
+      
+      window.parent.postMessage({ type: 'code_execution_result', results }, event.origin);
     });
   </script>
+</head>
+<body>
+  <!-- This body will be empty, as all logic runs in script -->
 </body>
 </html>

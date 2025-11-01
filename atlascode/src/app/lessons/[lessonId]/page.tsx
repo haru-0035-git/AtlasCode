@@ -9,11 +9,17 @@ interface Exercise {
   id: number;
 }
 
+interface Quiz {
+  id: number;
+  title: string;
+}
+
 interface Lesson {
   id: number;
   title: string;
   content: string | null;
   exercises: Exercise[];
+  quizzes: Quiz[];
 }
 
 interface Course {
@@ -26,10 +32,11 @@ interface LessonDetails extends Lesson {
   course: Course;
 }
 
-// In Next.js 15, `params` for a client component is a Promise.
-// We use `React.use` to unwrap it.
-const LessonPage = ({ params }: { params: Promise<{ lessonId: string }> }) => {
-  const { lessonId } = use(params);
+import { useParams } from 'next/navigation';
+
+const LessonPage = () => {
+  const params = useParams();
+  const lessonId = params.lessonId as string;
 
   const [lesson, setLesson] = useState<LessonDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -79,13 +86,18 @@ const LessonPage = ({ params }: { params: Promise<{ lessonId: string }> }) => {
           <p>{lesson.content}</p>
         </div>
 
-        {lesson.exercises && lesson.exercises.length > 0 && (
-          <div className="mt-8">
+        <div className="mt-8 flex space-x-4">
+          {lesson.exercises && lesson.exercises.length > 0 && (
             <Link href={`/exercises/${lesson.exercises[0].id}`} className="inline-block px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
                 演習へ進む
             </Link>
-          </div>
-        )}
+          )}
+          {lesson.quizzes && lesson.quizzes.length > 0 && (
+            <Link href={`/quizzes/${lesson.quizzes[0].id}`} className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                クイズへ進む
+            </Link>
+          )}
+        </div>
       </main>
     </div>
   );
