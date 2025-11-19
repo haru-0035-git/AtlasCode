@@ -4,9 +4,9 @@ import { PrismaClient } from '../../../../generated/prisma';
 const prisma = new PrismaClient();
 
 export async function GET(req: NextRequest, { params }: { params: { exerciseId: string } }) {
-  console.log('Fetching exercise with ID:', params.exerciseId);
   try {
     const { exerciseId } = params;
+    console.log('Fetching exercise with ID:', exerciseId);
     const exercise = await prisma.exercise.findUnique({
       where: { id: parseInt(exerciseId, 10) },
       select: {

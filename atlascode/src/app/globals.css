@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background-rgb: 255 255 255; /* white */
+  --foreground-rgb: 17 24 39;   /* gray-900 */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+.dark {
+  --background-rgb: 17 24 39;   /* gray-900 */
+  --foreground-rgb: 243 244 246; /* gray-100 */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background-color: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.sash-style {
+  --sash-size: 12px; /* 以前の8pxから12pxに */
+  background-color: rgb(var(--foreground-rgb) / 0.1);
+}
+
+.sash-style:hover {
+  --sash-hover-size: 12px; /* 以前の8pxから12pxに */
+  background-color: rgb(var(--foreground-rgb) / 0.2);
 }

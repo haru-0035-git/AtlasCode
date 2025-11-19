@@ -35,9 +35,14 @@ async function main() {
     }
   });
 
+  // 外部キー制約を考慮して、依存関係の末端から順にデータを削除します。
+  await prisma.quizSubmission.deleteMany({});
+  await prisma.quizQuestion.deleteMany({});
+  await prisma.submission.deleteMany({});
+  await prisma.progress.deleteMany({});
+  await prisma.quiz.deleteMany({});
   await prisma.exercise.deleteMany({});
   await prisma.lesson.deleteMany({});
-  await prisma.quiz.deleteMany({}); // Add this line to clear existing quizzes
 
   const lessons = [
     // JavaScript Lessons

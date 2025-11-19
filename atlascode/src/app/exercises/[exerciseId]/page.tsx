@@ -5,6 +5,8 @@ import { NextPage } from 'next';
 import Link from 'next/link';
 import CodeEditor from '@/components/ui/CodeEditor';
 import { v4 as uuidv4 } from 'uuid';
+import { Allotment } from 'allotment';
+import 'allotment/dist/style.css';
 
 type Props = {
   params: Promise<{ exerciseId: string }>;
@@ -20,7 +22,7 @@ type Exercise = {
     input: string;
     expected: string;
   }[];
-}
+};
 
 const ExercisePage: NextPage<Props> = ({ params }) => {
   const { exerciseId } = use(params);
@@ -34,7 +36,6 @@ const ExercisePage: NextPage<Props> = ({ params }) => {
   useEffect(() => {
     let storedSessionId = localStorage.getItem('sessionId');
     if (!storedSessionId) {
-      // This should ideally be set on the home page or layout
       storedSessionId = uuidv4();
       localStorage.setItem('sessionId', storedSessionId);
     }
@@ -73,7 +74,6 @@ const ExercisePage: NextPage<Props> = ({ params }) => {
         const allTestsPassed = results.every((r: any) => r.passed);
         setResult(JSON.stringify(results, null, 2));
 
-        // Send results to the backend for persistence and progress update
         try {
           const response = await fetch('/api/submissions', {
             method: 'POST',
@@ -93,7 +93,6 @@ const ExercisePage: NextPage<Props> = ({ params }) => {
             const errorData = await response.json();
             throw new Error(errorData.error || 'Failed to submit results');
           }
-          // Optionally, handle success response from submission API
         } catch (error) {
           console.error('Error submitting code results:', error);
           setResult(prev => prev + '\nError submitting results to server.');
@@ -124,40 +123,65 @@ const ExercisePage: NextPage<Props> = ({ params }) => {
   };
 
   if (isLoading) {
-    return <div className="container mx-auto p-4">読み込み中...</div>;
+    return <div className="flex items-center justify-center h-screen">読み込み中...</div>;
   }
 
   if (!exercise) {
-    return <div className="container mx-auto p-4">演習が見つかりません。</div>;
+    return <div className="flex items-center justify-center h-screen">演習が見つかりません。</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="h-screen flex flex-col">
       <iframe ref={iframeRef} src="/sandbox.html" className="hidden" title="Code Sandbox"></iframe>
-      <div className="mb-4">
+      <header className="p-2 border-b">
         <Link href={`/lessons/${exercise.lesson_id}`} className="text-blue-500 hover:underline">
           &larr; レッスンに戻る
         </Link>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-4">{exercise.question}</h1>
-          <div className="h-[400px] border rounded-md">
-            <CodeEditor value={code} onChange={handleCodeChange} />
-          </div>
-          <button
-            onClick={handleSubmit}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            実行
-          </button>
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold mb-2">結果</h2>
-          <pre className="bg-gray-800 text-white p-4 rounded-md h-[500px] overflow-auto">
-            {result}
-          </pre>
-        </div>
+      </header>
+      <div className="flex-grow h-full">
+        <Allotment defaultSizes={[30, 70]} sashClassName="sash-style" className="h-full">
+          <Allotment.Pane minSize={300}>
+            <div className="h-full overflow-auto">
+              <h1 className="text-2xl font-bold mb-4 p-4">{exercise.question}</h1>
+              {/* You can add more descriptive content here */}
+            </div>
+          </Allotment.Pane>
+          <Allotment.Pane>
+            <Allotment vertical sashClassName="sash-style">
+              <Allotment.Pane>
+                <CodeEditor value={code} onChange={handleCodeChange} />
+              </Allotment.Pane>
+              <Allotment.Pane>
+                <div className="h-full flex flex-col">
+                  <div className="p-2 border-b border-t flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">結果</h2>
+                    <button
+                      onClick={handleSubmit}
+                      className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      実行
+                    </button>
+                  </div>
+                  <div className="bg-foreground/5 text-foreground flex-grow p-4 overflow-auto">
+                    {result && JSON.parse(result).map((testResult: any, index: number) => (
+                      <div key={index} className="mb-4 p-2 border rounded-md">
+                        <p className="font-semibold">テスト {index + 1}:</p>
+                        <p>入力: <span className="font-mono">{testResult.input === '' ? '(なし)' : testResult.input}</span></p>
+                        <p>期待値: <span className="font-mono">{testResult.expected === '' ? '(なし)' : testResult.expected}</span></p>
+                        <p>実際の結果: <span className="font-mono">{testResult.actual === '' ? '(なし)' : testResult.actual}</span></p>
+                        {testResult.error && <p className="text-red-500">エラー: {testResult.error}</p>}
+                        <p className={testResult.passed ? 'text-green-500' : 'text-red-500'}>
+                          ステータス: {testResult.passed ? '合格' : '不合格'}
+                        </p>
+                      </div>
+                    ))}
+                    {!result && <p>コードを実行してください。</p>}
+                  </div>
+                </div>
+              </Allotment.Pane>
+            </Allotment>
+          </Allotment.Pane>
+        </Allotment>
       </div>
     </div>
   );

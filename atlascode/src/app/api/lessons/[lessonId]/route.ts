@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { lessonId: string } }
 ) {
   try {
-    const lessonId = params.lessonId;
+    const { lessonId } = params;
     const parsedLessonId = Number.parseInt(lessonId, 10);
     if (Number.isNaN(parsedLessonId)) {
       return NextResponse.json({ error: 'Invalid lesson ID' }, { status: 400 });
