@@ -15,6 +15,7 @@ interface Quiz {
   title: string;
   description?: string;
   questions: QuizQuestion[];
+  lesson_id: number; // Added lesson_id to quiz for navigation back
 }
 
 interface QuizSubmissionResult {
@@ -36,18 +37,20 @@ interface QuizResult {
 export default function QuizPage() {
   const { quizId } = useParams();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true); // Keep local loading for form submission
+  const [error, setError] = useState<string | null>(null); // Keep local error for form submission
   const [userAnswers, setUserAnswers] = useState<Record<number, string[]>>({});
   const [submissionResult, setSubmissionResult] = useState<QuizResult | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
 
   useEffect(() => {
     // Generate a simple session ID for anonymous users
-    if (!sessionId) {
-      setSessionId(localStorage.getItem('sessionId') || `anon-${Date.now()}`);
-      localStorage.setItem('sessionId', sessionId);
+    let storedSessionId = localStorage.getItem('sessionId');
+    if (!storedSessionId) {
+      storedSessionId = `anon-${Date.now()}`;
+      localStorage.setItem('sessionId', storedSessionId);
     }
+    setSessionId(storedSessionId);
 
     if (quizId) {
       fetch(`/api/quizzes/${quizId}`)
@@ -59,11 +62,12 @@ export default function QuizPage() {
         })
         .then((data) => {
           setQuiz(data);
-          setLoading(false);
         })
         .catch((err) => {
           setError(err.message);
-          setLoading(false);
+        })
+        .finally(() => {
+          setLoading(false); // Only set loading to false after quiz data is fetched
         });
     }
   }, [quizId, sessionId]);
@@ -112,20 +116,13 @@ export default function QuizPage() {
     }
   };
 
-  if (loading) {
-    return <div className="container mx-auto p-4">Loading quiz...</div>;
-  }
-
-  if (error) {
-    return <div className="container mx-auto p-4 text-red-500">Error: {error}</div>;
-  }
-
+  // Only handle local loading/error for the form submission, not initial page load
   if (!quiz) {
-    return <div className="container mx-auto p-4">Quiz not found.</div>;
+    return <div className="flex justify-center items-center h-full">クイズが見つかりません。</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="p-4"> {/* Added a div for consistent padding, adjust as needed */}
       <h1 className="text-3xl font-bold mb-4">{quiz.title}</h1>
       {quiz.description && <p className="text-lg mb-6">{quiz.description}</p>}
 
