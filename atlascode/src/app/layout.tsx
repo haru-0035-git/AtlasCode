@@ -24,7 +24,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class">
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="flex-grow w-full">
+            <main className="flex-grow w-full pt-4">
               {children}
             </main>
             <Footer />

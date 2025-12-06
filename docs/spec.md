@@ -50,6 +50,8 @@
 
 ---
 
+cd
+
 ## 4. 非機能要件
 
 ### パフォーマンス
@@ -160,9 +162,9 @@ CREATE TABLE progress (
 
 ---
 
-## 7. Prismaスキーマ
+## 7. Prisma スキーマ
 
-`schema.prisma`ファイルに記述するデータベースモデルの定義です。SQL設計案をPrismaの形式で表現したものです。
+`schema.prisma`ファイルに記述するデータベースモデルの定義です。SQL 設計案を Prisma の形式で表現したものです。
 
 ```prisma
 // 進捗状況を示すためのEnum

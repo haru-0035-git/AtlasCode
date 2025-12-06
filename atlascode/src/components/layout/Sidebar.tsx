@@ -14,13 +14,13 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ lessons, courseTitle }) => {
   return (
-    <aside className="w-64 bg-gray-100 p-4 border-r border-gray-200 flex-shrink-0">
-      <h2 className="text-lg font-bold mb-4 text-gray-800">{courseTitle}</h2>
+    <aside className="w-64 bg-white p-4 border-r border-gray-200 flex-shrink-0 dark:bg-slate-900 dark:text-white">
+      <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">{courseTitle}</h2>
       <nav>
-        <ul className="border-t border-gray-300">
+        <ul className="border-t border-gray-300 dark:border-gray-700">
           {lessons.map((lesson) => (
-            <li key={lesson.id} className="border-b border-gray-300">
-              <Link href={`/lessons/${lesson.id}`} className="block p-3 text-gray-700 hover:bg-gray-200 transition-colors">
+            <li key={lesson.id} className="border-b border-gray-300 dark:border-gray-700">
+              <Link href={`/lessons/${lesson.id}`} className="block p-3 text-gray-700 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">
                 {lesson.title}
               </Link>
             </li>

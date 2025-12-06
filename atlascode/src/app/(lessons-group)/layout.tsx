@@ -58,7 +58,7 @@ export default function LessonsLayout({
         lessons={course?.lessons || []} 
         courseTitle={course?.title || 'コースを読み込み中...'} 
       />
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto ml-4">
         {children}
       </main>
     </div>
